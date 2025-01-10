@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Banco de Dados de Clientes</title>
+    <link rel="icon" href="imagens/beauty salonnaveg.png" type="image/x-icon">
+        <link rel="icon" href="imagens/beauty salonnaveg.png" sizes="16x16" />
+        <link rel="icon" href="imagens/beauty salonnaveg.png" sizes="32x32" type="image/png" />
+        <link rel="icon" href="imagens/beauty salonnaveg.png" sizes="48x48" type="image/png" />
+        <link rel="apple-touch-icon" href="imagens/beauty salonnaveg.png">
+    <style>
+        body {
+            background-image: url(imagens/rosa\ textura.webp);
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        th, td {
+            background-color: white;
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        input[type="text"], input[type="number"], button {
+            padding: 8px;
+            margin: 5px;
+        }
+        button {
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+<h2>Banco de Dados de Clientes</h2>
+
+<!-- Formulário para adicionar cliente -->
+<div>
+    <h3>Adicionar Cliente</h3>
+    <input type="text" id="nome" placeholder="Nome" required>
+    <input type="text" id="sobrenome" placeholder="Sobrenome" required>
+    <input type="date" id="dataNascimento" required>
+    <button onclick="adicionarCliente()">Adicionar Cliente</button>
+</div>
+
+<!-- Tabela de clientes -->
+<h3>Clientes</h3>
+<table id="tabelaClientes">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Nome</th>
+            <th>Sobrenome</th>
+            <th>Data de Nascimento</th>
+            <th>Idade</th>
+            <th>Lista Individual</th>
+            <th>Cupons</th>
+            <th>Ações</th>
+        </tr>
+    </thead>
+    <tbody>
+    </tbody>
+</table>
+
+<script>
+    let clientes = [];
+    let idCliente = 1;
+
+    // Função para adicionar um cliente
+    function adicionarCliente() {
+        const nome = document.getElementById('nome').value;
+        const sobrenome = document.getElementById('sobrenome').value;
+        const dataNascimento = document.getElementById('dataNascimento').value;
+        
+        if (nome && sobrenome && dataNascimento) {
+            const idade = calcularIdade(new Date(dataNascimento));
+            const listaIndividual = [];
+            const cupons = [];
+            const cliente = {
+                id: idCliente++,
+                nome,
+                sobrenome,
+                dataNascimento,
+                idade,
+                listaIndividual,
+                cupons
+            };
+            clientes.push(cliente);
+            atualizarTabela();
+            limparCampos();
+        } else {
+            alert("Preencha todos os campos!");
+        }
+    }
+
+    // Função para calcular a idade a partir da data de nascimento
+    function calcularIdade(dataNascimento) {
+        const hoje = new Date();
+        let idade = hoje.getFullYear() - dataNascimento.getFullYear();
+        const mes = hoje.getMonth();
+        const dia = hoje.getDate();
+        if (mes < dataNascimento.getMonth() || (mes === dataNascimento.getMonth() && dia < dataNascimento.getDate())) {
+            idade--;
+        }
+        return idade;
+    }
+
+    // Função para atualizar a tabela
+    function atualizarTabela() {
+        const tabela = document.getElementById('tabelaClientes').getElementsByTagName('tbody')[0];
+        tabela.innerHTML = ''; // Limpar a tabela atual
+        clientes.forEach(cliente => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>${cliente.id}</td>
+                <td>${cliente.nome}</td>
+                <td>${cliente.sobrenome}</td>
+                <td>${cliente.dataNascimento}</td>
+                <td>${cliente.idade}</td>
+                <td>${cliente.listaIndividual.join(', ')}</td>
+                <td>${cliente.cupons.join(', ')}</td>
+                <td>
+                    <button onclick="adicionarNumero(${cliente.id})">Adicionar Número</button>
+                    <button onclick="removerCliente(${cliente.id})">Remover</button>
+                    <button onclick="utilizarCupom(${cliente.id})">Utilizar Cupom</button>
+                </td>
+            `;
+            tabela.appendChild(tr);
+        });
+    }
+
+    // Função para adicionar um número à lista individual do cliente
+    function adicionarNumero(clienteId) {
+        const cliente = clientes.find(c => c.id === clienteId);
+        if (cliente.listaIndividual.length < 10) {
+            let numero = cliente.listaIndividual.length + 1;
+            cliente.listaIndividual.push(numero);
+            
+            // Quando atingir o número 10, gerar cupom
+            if (numero === 10) {
+                const cupom = gerarCupom();
+                cliente.cupons.push(cupom);
+                cliente.listaIndividual = []; // Esvaziar a lista
+            }
+            atualizarTabela();
+        } else {
+            alert('A lista já contém 10 números!');
+        }
+    }
+
+    // Função para gerar um cupom único
+    function gerarCupom() {
+        const letras = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+        const numeros = '0123456789';
+        const cupom = 'BEAUTY' +
+            obterAleatorio(numeros, 2) +
+            obterAleatorio(letras, 1) +
+            obterAleatorio(numeros, 1) +
+            obterAleatorio(letras, 1) +
+            obterAleatorio(numeros, 1);
+        return cupom;
+    }
+
+    // Função para obter caracteres aleatórios de uma string
+    function obterAleatorio(caracteres, comprimento) {
+        let resultado = '';
+        for (let i = 0; i < comprimento; i++) {
+            resultado += caracteres.charAt(Math.floor(Math.random() * caracteres.length));
+        }
+        return resultado;
+    }
+
+    // Função para remover um cliente
+    function removerCliente(clienteId) {
+        clientes = clientes.filter(c => c.id !== clienteId);
+        atualizarTabela();
+    }
+
+    // Função para utilizar um cupom (remover o primeiro cupom da lista)
+    function utilizarCupom(clienteId) {
+        const cliente = clientes.find(c => c.id === clienteId);
+        if (cliente.cupons.length > 0) {
+            // Remover o primeiro cupom da lista
+            cliente.cupons.shift();
+            atualizarTabela();
+            alert('Cupom utilizado com sucesso!');
+        } else {
+            alert('Não há cupons disponíveis para este cliente.');
+        }
+    }
+
+    // Função para limpar os campos do formulário
+    function limparCampos() {
+        document.getElementById('nome').value = '';
+        document.getElementById('sobrenome').value = '';
+        document.getElementById('dataNascimento').value = '';
+    }
+</script>
+
+</body>
+</html>
